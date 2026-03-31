@@ -1472,27 +1472,23 @@ function submitAdmin() {
 
 function applyEditRestrictions() {
   document.querySelectorAll('.task').forEach(el => {
-    if(isAdmin) {
-      // Admin — remove restrictions
-      el.classList.remove('no-edit');
-      const onclickAttr = el.getAttribute('onclick');
-      if(!onclickAttr && !el.classList.contains('locked')) {
-        const match = el.dataset.key;
-        if(match) el.onclick = function(){ toggleTask(match, el); };
-      }
-    } else {
-      // Not admin — restrict checkbox clicks unless locked
-      if(!el.classList.contains('locked')) {
-        el.classList.add('no-edit');
-      }
+    // Remove no-edit from all tasks — team can freely check
+    el.classList.remove('no-edit');
+    // Only locked tasks stay locked
+    if(el.classList.contains('locked') && !isAdmin) {
+      el.onclick = null;
     }
   });
 }
 
-// Override toggleTask to check admin
+// Override toggleTask — team can CHECK, only admin can UNCHECK
 const _adminOrigToggle = window.toggleTask;
 window.toggleTask = function(key, el) {
-  if(!isAdmin) return; // Block non-admins
+  const alreadyDone = taskState[key];
+  // If task is already checked — only admin can uncheck
+  if(alreadyDone && !isAdmin) return;
+  // If task is locked — nobody can change it
+  if(el.classList.contains('locked')) return;
   _adminOrigToggle(key, el);
 };
 
